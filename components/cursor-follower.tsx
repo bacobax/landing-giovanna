@@ -16,29 +16,8 @@ export function CursorFollower() {
   const animationRef = useRef<number>(null)
   const [cursorVisible, setCursorVisible] = useState(true)
   const [isHoveringInteractive, setIsHoveringInteractive] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const checkMobile = () => {
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-      const isSmallScreen = window.innerWidth <= 768
-      setIsMobile(isTouchDevice || isSmallScreen)
-    }
-
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-
-    return () => {
-      window.removeEventListener('resize', checkMobile)
-    }
-  }, [])
-
-  useEffect(() => {
-    // If mobile, don't set up cursor functionality
-    if (isMobile) {
-      return
-    }
-
     const handleMouseMove = (e: MouseEvent) => {
       mousePositionRef.current = { x: e.clientX, y: e.clientY }
     }
@@ -135,15 +114,10 @@ export function CursorFollower() {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [cursorVisible, isMobile]) // Add isMobile to dependencies to re-run when it changes
+  }, [cursorVisible]) // Add cursorVisible to dependencies to re-run when it changes
 
   // Effect to hide default cursor when custom cursor is visible
   useEffect(() => {
-    // If mobile, don't modify cursor styles
-    if (isMobile) {
-      return
-    }
-
     if (cursorVisible) {
       document.body.style.cursor = 'none'
       // Also hide cursor-pointer on interactive elements
@@ -177,15 +151,10 @@ export function CursorFollower() {
         existingStyle.remove()
       }
     }
-  }, [cursorVisible, isMobile])
+  }, [cursorVisible])
 
   const toggleCursor = () => {
     setCursorVisible(!cursorVisible)
-  }
-
-  // If mobile, don't render the custom cursor
-  if (isMobile) {
-    return null
   }
 
   return (

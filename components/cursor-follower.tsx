@@ -16,6 +16,28 @@ export function CursorFollower() {
   const animationRef = useRef<number>(null)
   const [cursorVisible, setCursorVisible] = useState(true)
   const [isHoveringInteractive, setIsHoveringInteractive] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      const isSmallScreen = window.innerWidth <= 768
+      setIsMobile(isTouchDevice || isSmallScreen)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
+    return () => {
+      window.removeEventListener('resize', checkMobile)
+    }
+  }, [])
+
+  // If mobile, don't render the custom cursor
+  if (isMobile) {
+    return null
+  }
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

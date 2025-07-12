@@ -19,8 +19,11 @@ export function HeroSection() {
       <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-primary-tan rounded-full opacity-10 -translate-x-1/2 -translate-y-1/2 animate-float-fast" />
 
       <div className="relative z-10 max-w-4xl mx-auto space-y-6">
-        <h1 className="text-5xl md:text-7xl font-playfair font-bold leading-tight text-gray-900 relative">
-          Minimal Atelier <span className="text-2xl md:text-3xl align-middle font-normal text-primary-tan absolute bottom-0 right-0">By Gio</span>
+        <h1 className="text-5xl md:text-7xl font-playfair font-bold leading-tight text-gray-900 flex flex-col sm:flex-row items-center sm:items-end gap-2 sm:gap-4">
+          <span>Minimal Atelier</span>
+          <span className="text-2xl md:text-3xl font-normal text-primary-tan">
+            By Gio
+          </span>
         </h1>
 
         <p className="text-lg md:text-xl text-gray-700 max-w-2xl mx-auto">

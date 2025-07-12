@@ -97,7 +97,7 @@ export function ReelsContent() {
 
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isMounted])
+  }, [isMounted, handleKeyDown])
 
   useEffect(() => {
     // Auto-advance every 5 seconds if autoplay is enabled
@@ -109,7 +109,7 @@ export function ReelsContent() {
 
       return () => clearInterval(interval)
     }
-  }, [isAutoPlay, reelsMedia.length, isMounted, currentIndex])
+  }, [isAutoPlay, reelsMedia.length, isMounted, currentIndex, reelsMedia])
 
   useEffect(() => {
     // Handle video playback
@@ -307,7 +307,7 @@ export function ReelsContent() {
       {/* Instructions */}
       <div className="text-center text-sm text-gray-600 space-y-2">
         <p>Usa le frecce o clicca sui pulsanti per navigare</p>
-        <p>Clicca sul pulsante play/pause per controllare l'autoplay</p>
+        <p>Clicca sul pulsante play/pause per controllare l&apos;autoplay</p>
         <p className="text-xs">
           {currentIndex + 1} of {reelsMedia.length}
         </p>

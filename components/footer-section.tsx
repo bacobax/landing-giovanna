@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "./ui/button";
+import { signOut } from "next-auth/react";
 
 interface FooterSectionProps {
   onAdminClick: () => void;
@@ -19,6 +20,15 @@ export function FooterSection({ onAdminClick }: FooterSectionProps) {
       >
         Admin
       </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute right-24 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+        onClick={() => signOut()}
+        aria-label="Logout"
+      >
+        Logout
+      </Button>
     </footer>
   )
-} 
+}

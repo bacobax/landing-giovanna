@@ -74,6 +74,7 @@ export function GalleryContent() {
       const res = await fetch('/api/image', {
         method: 'POST',
         body: formData,
+        cache: "no-store",
       });
       const data = await res.json();
       if (data.success) {
@@ -161,7 +162,7 @@ export function GalleryContent() {
             >
               <div className="relative overflow-hidden">
                 <Image
-                  src={`/api/image/${image.src}`}
+                  src={`/api/image/${image.id}?cb=${Date.now()}`}
                   width={400}
                   height={300}
                   alt={image.alt}
@@ -185,6 +186,43 @@ export function GalleryContent() {
                 <Button variant="link" className="p-0 h-auto text-primary-tan hover:text-primary-tan/80">
                   Scopri di più
                 </Button>
+                {session && (
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={async () => {
+                        if (confirm("Sei sicuro di voler eliminare questa immagine?")) {
+                          const res = await fetch(`/api/image/${image.id}`, { method: "DELETE" });
+                          if (res.ok) fetchImages();
+                        }
+                      }}
+                    >
+                      Elimina
+                    </Button>
+                    <label className="inline-block">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          const res = await fetch(`/api/image/${image.id}`, {
+                            method: "PUT",
+                            body: formData,
+                          });
+                          if (res.ok) fetchImages();
+                        }}
+                      />
+                      <Button asChild variant="secondary" size="sm">
+                        <span>Modifica</span>
+                      </Button>
+                    </label>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )
@@ -260,7 +298,7 @@ export function GalleryContent() {
                     required
                   />
                   <div className="flex gap-2 mt-2">
-                    <Button type="submit" className="text-primary-tan border-primary-tan" disabled={submitting}>
+                    <Button type="submit" className="text-white border-primary-tan" disabled={submitting}>
                       Carica
                     </Button>
                     <Button type="button" variant="outline" onClick={() => setAddingNew(false)}>

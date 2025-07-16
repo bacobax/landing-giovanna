@@ -13,8 +13,8 @@ export const authOptions: NextAuthOptions = {
         const { username, password } = credentials ?? {};
 
         // ✅ Your one allowed user
-        const validUsername = "admin";
-        const validPassword = "mypassword";
+        const validUsername = process.env.LOGIN_USERNAME!;
+        const validPassword = process.env.LOGIN_PASSWORD!;
 
         if (username === validUsername && password === validPassword) {
           return { id: "1", name: "Admin" };

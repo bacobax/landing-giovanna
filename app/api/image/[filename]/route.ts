@@ -1,11 +1,8 @@
 // app/api/image/[filename]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import path from "path";
 import { readFile } from "fs/promises";
 import fs from "fs";
-import { getImageById } from "@/lib/store-utils";
 
 export async function GET(req: NextRequest, { params }: { params: { filename: string } }) {
 //   const session = await getServerSession(authOptions);

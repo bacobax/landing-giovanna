@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { readFile } from "fs/promises";
 import { getImages } from "@/lib/store-utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -8,22 +7,6 @@ import { mkdir, writeFile } from "fs/promises";
 import { addImage } from "@/lib/store-utils";
 import { v4 as uuidv4 } from 'uuid';
 import sharp from "sharp";
-
-// Helper to get MIME type from file extension
-function getMimeType(filename: string) {
-    const ext = filename.split('.').pop()?.toLowerCase();
-    switch (ext) {
-        case "jpg":
-        case "jpeg":
-            return "image/jpeg";
-        case "png":
-            return "image/png";
-        case "gif":
-            return "image/gif";
-        default:
-            return "application/octet-stream";
-    }
-}
 
 export async function GET(req: NextRequest) {
     const images = await getImages();

@@ -7,7 +7,6 @@ import { useEffect, useState, useRef } from "react"
 import { GalleryImage } from "@/lib/gallery"
 import { useSession } from "next-auth/react"
 
-import { useFormState } from "react-dom";
 
 export function GalleryContent() {
   const [images, setImages] = useState<GalleryImage[]>([])

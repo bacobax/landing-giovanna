@@ -10,10 +10,10 @@ export const getImages = async () => {
 
 export const getImageById = async (id: string) => {
     const images = await getImages();
-    return images.find((image: any) => image.id === id);
+    return images.find((image: unknown) => (image as any).id === id);
 };
 
-export const addImage = async (image: any) => {
+export const addImage = async (image: unknown) => {
     const images = await getImages();
     images.push(image);
     await fs.writeFile(storejsonPath, JSON.stringify(images, null, 2));

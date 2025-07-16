@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { readFile } from "fs/promises";
 import fs from "fs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { deleteImage, getImageById } from "@/lib/store-utils";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -53,6 +51,8 @@ export async function DELETE(_: NextRequest, { params }) {
   try {
     fs.unlinkSync(filePath);
     return NextResponse.json({ success: true });
+  
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     return NextResponse.json({ error: "Failed to delete file" }, { status: 500 });
   }
@@ -79,6 +79,7 @@ export async function PUT(request: NextRequest, { params }) {
   try {
     fs.writeFileSync(filePath, buffer);
     return NextResponse.json({ success: true });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
   }

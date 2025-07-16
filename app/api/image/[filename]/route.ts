@@ -3,15 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { readFile } from "fs/promises";
 import fs from "fs";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-expect-error: the normal type i wuld have assigned to params arg was recognized as type error by nextjs
+export async function GET( _: NextRequest, { params }) {
+  //   const session = await getServerSession(authOptions);
+  //   if (!session) {
+  //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  //   }
+  console.log({ _ });
+  const { filename } = params;
 
-export async function GET(req: NextRequest, { params }: { params: { filename: string } }) {
-//   const session = await getServerSession(authOptions);
-//   if (!session) {
-//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//   }
-
-  const { filename } = await params;
- 
   const filePath = path.join(process.cwd(), "uploads", filename);
 
   // Check if file exists

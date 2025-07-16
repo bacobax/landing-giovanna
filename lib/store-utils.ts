@@ -10,7 +10,7 @@ export const getImages = async () => {
 
 export const getImageById = async (id: string) => {
     const images = await getImages();
-    return images.find((image: unknown) => (image as any).id === id);
+    return images.find((image: unknown) => (image as { id: string }).id === id);
 };
 
 export const addImage = async (image: unknown) => {

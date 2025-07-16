@@ -8,7 +8,7 @@ import { addImage } from "@/lib/store-utils";
 import { v4 as uuidv4 } from 'uuid';
 import sharp from "sharp";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     const images = await getImages();
 
     return NextResponse.json(images);

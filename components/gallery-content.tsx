@@ -91,7 +91,9 @@ export function GalleryContent() {
       } else {
         setFormState({ error: data.error || 'Errore durante il caricamento.' });
       }
-    } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
+
       setFormState({ error: 'Errore di rete.' });
     } finally {
       setSubmitting(false);
@@ -104,7 +106,8 @@ export function GalleryContent() {
       const res = await fetch("/api/image");
       const data = await res.json();
       setImages(data);
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars 
+    } catch (_) {
       setImages([]);
     } finally {
       setLoading(false);

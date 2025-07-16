@@ -9,6 +9,8 @@ export interface GalleryImage {
   description: string
   medium: string
   year: string
+  data?: string // base64 image data
+  contentType?: string // MIME type
 }
 
 export function getGalleryImages(): GalleryImage[] {

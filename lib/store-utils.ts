@@ -15,15 +15,17 @@ export type ImageRecord = {
 
 export const getImages = async (): Promise<ImageRecord[]> => {
     const fileContents = await fs.readFile(storejsonPath, "utf-8");
-    return JSON.parse(fileContents);
+    const records = JSON.parse(fileContents) as ImageRecord[];
+    return records.filter(record => record.medium === "image");
 };
 
 export const getImageById = async (id: string): Promise<ImageRecord | undefined> => {
     const images = await getImages();
-    return images.find((image: ImageRecord) => image.id === id);
+    return images.find((image: ImageRecord) => image.id === id && image.medium === "image");
 };
 
 export const addImage = async (image: ImageRecord): Promise<void> => {
+    image.medium = "image";
     const images = await getImages();
     images.push(image);
     await fs.writeFile(storejsonPath, JSON.stringify(images, null, 2));
@@ -54,3 +56,14 @@ export const deleteImage = async (id: string): Promise<ImageRecord | null> => {
         return null;
     }
 };
+
+export const getVideos = async (): Promise<ImageRecord[]> => {
+    const fileContents = await fs.readFile(storejsonPath, "utf-8");
+    const records = JSON.parse(fileContents) as ImageRecord[];
+    return records.filter(record => record.medium === "video");
+};
+
+export const getVideoById = async (id: string): Promise<ImageRecord | undefined> => {
+    const videos = await getVideos();
+    return videos.find((video: ImageRecord) => video.id === id && video.medium === "video");
+}; 

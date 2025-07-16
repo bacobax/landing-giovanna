@@ -163,7 +163,7 @@ export function ReelsContent() {
         <div className="relative w-full h-full">
           {currentMedia.type === "image" ? (
             <Image
-              src={currentMedia.src}
+              src={`/api/image/${currentMedia.id}?cb=${Date.now()}`}
               alt={currentMedia.alt}
               fill
               className="object-cover"
@@ -175,7 +175,7 @@ export function ReelsContent() {
                 ref={(el) => {
                   videoRefs.current[currentMedia.id] = el
                 }}
-                src={currentMedia.src}
+                src={`/api/video/${currentMedia.id}?cb=${Date.now()}`}
                 className="w-full h-full object-cover"
                 loop
                 muted
@@ -196,7 +196,7 @@ export function ReelsContent() {
                   setVideoError("Impossibile caricare il video. Per favore, prova a ricaricare la pagina.")
                 }}
               >
-                <source src={currentMedia.src} type="video/mp4" />
+                <source src={`/api/video/${currentMedia.id}`} type="video/mp4" />
                 Il tuo browser non supporta il tag video.
               </video>
               

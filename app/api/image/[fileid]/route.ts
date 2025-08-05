@@ -1,40 +1,35 @@
 // app/api/image/[filename]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { readFile } from "fs/promises";
-import fs from "fs";
 import { deleteImage, getImageById } from "@/lib/store-utils";
+import { downloadStream, deleteFile as deleteDriveFile, updateFile as updateDriveFile } from "@/lib/drive_actions";
+import sharp from "sharp";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // @ts-expect-error: the normal type i wuld have assigned to params arg was recognized as type error by nextjs
-export async function GET( _: NextRequest, { params }) {
-  //   const session = await getServerSession(authOptions);
-  //   if (!session) {
-  //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  //   }
-
+export async function GET(_: NextRequest, { params }) {
   const { fileid } = await params;
-  console.log({ fileid });
-  const image = await getImageById(fileid); 
+  const image = await getImageById(fileid);
   if (!image) {
     return NextResponse.json({ error: "Image not found" }, { status: 404 });
   }
 
-  const filePath = path.join(process.cwd(), "uploads", image.src);
-
-  // Check if file exists
-  if (!fs.existsSync(filePath)) {
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  try {
+    const stream = await downloadStream(image.src);
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const fileBuffer = Buffer.concat(chunks);
+    return new NextResponse(fileBuffer, {
+      headers: {
+        "Content-Type": "image/jpeg",
+        "Content-Disposition": `inline; fileid="${fileid}"`,
+      },
+    });
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch file" }, { status: 500 });
   }
-
-  const fileBuffer = await readFile(filePath);
-  // Optionally, set the correct content type based on file extension
-  return new NextResponse(fileBuffer, {
-    headers: {
-      "Content-Type": "image/jpeg", // or detect dynamically
-      "Content-Disposition": `inline; fileid="${fileid}"`,
-    },
-  });
 }
 
 // @ts-expect-error: the normal type I would have assigned to params arg was recognized as type error by nextjs
@@ -44,16 +39,10 @@ export async function DELETE(_: NextRequest, { params }) {
   if (!image) {
     return NextResponse.json({ error: "Image not found" }, { status: 404 });
   }
-  const filePath = path.join(process.cwd(), "uploads", image.src);
-  if (!fs.existsSync(filePath)) {
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
-  }
   try {
-    fs.unlinkSync(filePath);
+    await deleteDriveFile(image.src);
     return NextResponse.json({ success: true });
-  
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to delete file" }, { status: 500 });
   }
 }
@@ -64,10 +53,6 @@ export async function PUT(request: NextRequest, { params }) {
   const image = await getImageById(fileid);
   if (!image) {
     return NextResponse.json({ error: "Image not found" }, { status: 404 });
-  } 
-  const filePath = path.join(process.cwd(), "uploads", image.src);
-  if (!fs.existsSync(filePath)) {
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
   const formData = await request.formData();
   const file = formData.get("file");
@@ -75,12 +60,26 @@ export async function PUT(request: NextRequest, { params }) {
     return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
   }
   const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  let buffer = Buffer.from(arrayBuffer);
+  const ext = path.extname(file.name).toLowerCase();
+  if (ext === ".jpg" || ext === ".jpeg") {
+    buffer = await sharp(buffer).resize({ width: 1200 }).jpeg({ quality: 80 }).toBuffer();
+  } else if (ext === ".png") {
+    buffer = await sharp(buffer).resize({ width: 1200 }).png({ quality: 80 }).toBuffer();
+  } else if (ext === ".webp") {
+    buffer = await sharp(buffer).resize({ width: 1200 }).webp({ quality: 80 }).toBuffer();
+  } else if (ext === ".heic") {
+    buffer = await sharp(buffer).resize({ width: 1200 }).jpeg({ quality: 80 }).toBuffer();
+  } else {
+    buffer = await sharp(buffer).resize({ width: 1200 }).jpeg({ quality: 80 }).toBuffer();
+  }
+  let mimeType = "image/jpeg";
+  if (ext === ".png") mimeType = "image/png";
+  else if (ext === ".webp") mimeType = "image/webp";
   try {
-    fs.writeFileSync(filePath, buffer);
+    await updateDriveFile(image.src, buffer, mimeType);
     return NextResponse.json({ success: true });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
   }
 }

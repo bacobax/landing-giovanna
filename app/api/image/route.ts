@@ -3,10 +3,10 @@ import path from "path";
 import { getImages } from "@/lib/store-utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { mkdir, writeFile } from "fs/promises";
 import { addImage } from "@/lib/store-utils";
 import { v4 as uuidv4 } from 'uuid';
 import sharp from "sharp";
+import { uploadBuffer } from "@/lib/drive_actions";
 
 export async function GET() {
     const images = await getImages();
@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
     if (!file || typeof file === 'string') return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
 
     const id = uuidv4();
-    const src = file.name;
     const alt = (formData.get('alt') as string) || file.name;
     const title = (formData.get('title') as string) || file.name;
     const description = (formData.get('description') as string) || file.name;
@@ -66,22 +65,20 @@ export async function POST(req: NextRequest) {
         .toBuffer();
     }
 
-    // Ensure uploads directory exists
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    await mkdir(uploadDir, { recursive: true });
+    let mimeType = "image/jpeg";
+    if (ext === ".png") mimeType = "image/png";
+    else if (ext === ".webp") mimeType = "image/webp";
 
-    // Save file in uploads (not public)
-    const uploadPath = path.join(uploadDir, file.name);
-    await writeFile(uploadPath, compressedBuffer);
+    const driveId = await uploadBuffer(compressedBuffer, file.name, mimeType);
 
     await addImage({
       id,
-      src,
+      src: driveId,
       alt,
       title,
       description,
       medium,
-      year
+      year,
     });
-    return NextResponse.json({ success: true, filename: file.name });
+    return NextResponse.json({ success: true, fileId: driveId });
 }

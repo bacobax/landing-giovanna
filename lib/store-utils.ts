@@ -8,6 +8,7 @@ export type ImageRecord = {
   description: string;
   medium: string;
   year: string;
+  show_reel?: boolean;
 };
 
 const collectionName = "images";
@@ -25,6 +26,7 @@ export const getImageById = async (id: string): Promise<ImageRecord | undefined>
 
 export const addImage = async (image: ImageRecord): Promise<void> => {
   image.medium = "image";
+  image.show_reel = false;
   const collection = await getCollection<ImageRecord>(collectionName);
   await collection.insertOne(image);
 };
@@ -54,4 +56,19 @@ export const getVideoById = async (id: string): Promise<ImageRecord | undefined>
   const collection = await getCollection<ImageRecord>(collectionName);
   const video = await collection.findOne({ id, medium: "video" });
   return video ?? undefined;
+};
+
+export const getAllMedia = async (): Promise<ImageRecord[]> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  return collection.find({}).toArray();
+};
+
+export const getReels = async (): Promise<ImageRecord[]> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  return collection.find({ show_reel: true }).toArray();
+};
+
+export const setShowReel = async (id: string, show: boolean): Promise<void> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  await collection.updateOne({ id }, { $set: { show_reel: show } });
 };

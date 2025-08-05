@@ -13,13 +13,15 @@ export function GalleryContent() {
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
   const [addingNew, setAddingNew] = useState(false)
-  const [newImage, setNewImage] = useState({
+  const [newMedia, setNewMedia] = useState({
     title: "",
     medium: "",
     year: "",
     description: "",
     file: null as File | null,
     alt: "",
+    gallery: true,
+    reels: false,
   })
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -30,7 +32,6 @@ export function GalleryContent() {
   // const [formState, formAction] = useFormState(uploadImageReducer, null)
   const [formState, setFormState] = useState<{ success?: boolean; error?: string } | null>(null);
   const { data: session } = useSession();
-  console.log({session})
 
   const toggleCardExpansion = (cardId: string) => {
     setExpandedCards(prev => {
@@ -49,12 +50,16 @@ export function GalleryContent() {
     return description.substring(0, maxLength).trim() + "..."
   }
 
-  const handleNewImageChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, files } = e.target as HTMLInputElement
+  const handleNewMediaChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, files, type, checked } = e.target as HTMLInputElement
     if (name === "file" && files) {
-      setNewImage(prev => ({ ...prev, file: files[0] }))
+      setNewMedia((prev) => ({ ...prev, file: files[0] }))
+    } else if (type === "checkbox") {
+      setNewMedia((prev) => ({ ...prev, [name]: checked }))
     } else {
-      setNewImage(prev => ({ ...prev, [name]: value }))
+      setNewMedia((prev) => ({ ...prev, [name]: value }))
     }
   }
 
@@ -64,15 +69,18 @@ export function GalleryContent() {
     setSubmitting(true);
     setFormState(null);
     const formData = new FormData();
-    if (newImage.file) formData.append('file', newImage.file);
-    formData.append('title', newImage.title);
-    formData.append('medium', newImage.medium);
-    formData.append('year', newImage.year);
-    formData.append('description', newImage.description);
-    formData.append('alt', newImage.alt);
+    if (newMedia.file) formData.append("file", newMedia.file);
+    formData.append("title", newMedia.title);
+    formData.append("medium", newMedia.medium);
+    formData.append("year", newMedia.year);
+    formData.append("description", newMedia.description);
+    formData.append("alt", newMedia.alt);
+    formData.append("show_reel", String(newMedia.reels));
+    formData.append("reel_only", String(newMedia.reels && !newMedia.gallery));
     try {
-      const res = await fetch('/api/image', {
-        method: 'POST',
+      const isVideo = newMedia.file?.type.startsWith("video");
+      const res = await fetch(isVideo ? "/api/video" : "/api/image", {
+        method: "POST",
         body: formData,
         cache: "no-store",
       });
@@ -80,22 +88,23 @@ export function GalleryContent() {
       if (data.success) {
         setFormState({ success: true });
         fetchImages();
-        setNewImage({
+        setNewMedia({
           title: "",
           medium: "",
           year: "",
           description: "",
           file: null,
           alt: "",
+          gallery: true,
+          reels: false,
         });
         setAddingNew(false);
       } else {
-        setFormState({ error: data.error || 'Errore durante il caricamento.' });
+        setFormState({ error: data.error || "Errore durante il caricamento." });
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
-
-      setFormState({ error: 'Errore di rete.' });
+      setFormState({ error: "Errore di rete." });
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +152,6 @@ export function GalleryContent() {
     )
   }
 
-  console.log({images})
   
   return (
     <div className="space-y-8">
@@ -232,34 +240,62 @@ export function GalleryContent() {
             <form onSubmit={handleUploadSubmit} className="flex flex-col justify-between h-full w-full">
               <Card className="overflow-hidden rounded-lg shadow-lg bg-white">
                 <div className="relative overflow-hidden flex items-center justify-center h-60 bg-gray-100">
-                  {newImage.file ? (
-                    <Image
-                      src={URL.createObjectURL(newImage.file)}
-                      width={400}
-                      height={300}
-                      alt={newImage.alt || "preview"}
-                      className="w-full h-60 object-cover"
-                    />
+                  {newMedia.file ? (
+                    newMedia.file.type.startsWith("video") ? (
+                      <video
+                        src={URL.createObjectURL(newMedia.file)}
+                        className="w-full h-60 object-cover"
+                        controls
+                      />
+                    ) : (
+                      <Image
+                        src={URL.createObjectURL(newMedia.file)}
+                        width={400}
+                        height={300}
+                        alt={newMedia.alt || "preview"}
+                        className="w-full h-60 object-cover"
+                      />
+                    )
                   ) : (
-                    <span className="text-gray-400">Anteprima immagine</span>
+                    <span className="text-gray-400">Anteprima media</span>
                   )}
                 </div>
                 <CardContent className="p-6 space-y-2">
                   <input
                     type="file"
                     name="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     ref={fileInputRef}
-                    onChange={handleNewImageChange}
+                    onChange={handleNewMediaChange}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-tan/20 file:text-primary-tan hover:file:bg-primary-tan/40"
                     required
                   />
+                  <div className="flex gap-4 mt-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="gallery"
+                        checked={newMedia.gallery}
+                        onChange={handleNewMediaChange}
+                      />
+                      Gallery
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="reels"
+                        checked={newMedia.reels}
+                        onChange={handleNewMediaChange}
+                      />
+                      Reels
+                    </label>
+                  </div>
                   <input
                     type="text"
                     name="title"
                     placeholder="Titolo"
-                    value={newImage.title}
-                    onChange={handleNewImageChange}
+                    value={newMedia.title}
+                    onChange={handleNewMediaChange}
                     className="w-full border rounded px-2 py-1 mt-2"
                     required
                   />
@@ -267,8 +303,8 @@ export function GalleryContent() {
                     type="text"
                     name="medium"
                     placeholder="Tecnica"
-                    value={newImage.medium}
-                    onChange={handleNewImageChange}
+                    value={newMedia.medium}
+                    onChange={handleNewMediaChange}
                     className="w-full border rounded px-2 py-1"
                     required
                   />
@@ -276,8 +312,8 @@ export function GalleryContent() {
                     type="text"
                     name="year"
                     placeholder="Anno"
-                    value={newImage.year}
-                    onChange={handleNewImageChange}
+                    value={newMedia.year}
+                    onChange={handleNewMediaChange}
                     className="w-full border rounded px-2 py-1"
                     required
                   />
@@ -285,15 +321,15 @@ export function GalleryContent() {
                     type="text"
                     name="alt"
                     placeholder="Testo alternativo"
-                    value={newImage.alt}
-                    onChange={handleNewImageChange}
+                    value={newMedia.alt}
+                    onChange={handleNewMediaChange}
                     className="w-full border rounded px-2 py-1"
                   />
                   <textarea
                     name="description"
                     placeholder="Descrizione"
-                    value={newImage.description}
-                    onChange={handleNewImageChange}
+                    value={newMedia.description}
+                    onChange={handleNewMediaChange}
                     className="w-full border rounded px-2 py-1"
                     required
                   />
@@ -306,7 +342,7 @@ export function GalleryContent() {
                     </Button>
                   </div>
                   {formState?.error && <div className="text-red-500 text-sm mt-2">{formState.error}</div>}
-                  {formState?.success && <div className="text-green-600 text-sm mt-2">Immagine caricata!</div>}
+                  {formState?.success && <div className="text-green-600 text-sm mt-2">Media caricato!</div>}
                 </CardContent>
               </Card>
             </form>
@@ -315,7 +351,7 @@ export function GalleryContent() {
               <Button
                 variant="outline"
                 className="w-full h-60 text-4xl font-bold text-primary-tan border-2 border-primary-tan hover:bg-primary-tan/10"
-                aria-label="Aggiungi nuova immagine"
+                aria-label="Aggiungi nuovo media"
                 onClick={() => setAddingNew(true)}
               >
                 +

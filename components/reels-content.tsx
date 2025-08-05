@@ -37,6 +37,9 @@ export function ReelsContent() {
     const res = await fetch("/api/reel")
     const data = await res.json()
     setReelsMedia(data)
+    setCurrentIndex((prev) =>
+      data.length > 0 ? Math.min(prev, data.length - 1) : 0
+    )
   }
 
   const fetchAllMedia = async () => {
@@ -129,17 +132,20 @@ export function ReelsContent() {
 
   useEffect(() => {
     // Handle video playback
-    if (!isMounted || reelsMedia.length === 0) return
+    if (!isMounted || reelsMedia.length === 0 || !reelsMedia[currentIndex]) return
 
-    const currentVideo = videoRefs.current[reelsMedia[currentIndex].id]
-    if (currentVideo && reelsMedia[currentIndex].medium === "video") {
+    const currentMedia = reelsMedia[currentIndex]
+    const currentVideo = videoRefs.current[currentMedia.id]
+    if (currentVideo && currentMedia.medium === "video") {
       if (isPlaying) {
         // Use a more robust approach to handle video playback
         const playPromise = currentVideo.play()
         if (playPromise !== undefined) {
           playPromise.catch((error) => {
             console.log("Video play failed:", error)
-            setVideoError("Video playback was interrupted. This is normal behavior to save power.")
+            setVideoError(
+              "Video playback was interrupted. This is normal behavior to save power."
+            )
             // Don't throw error, just log it
           })
         }
@@ -147,7 +153,7 @@ export function ReelsContent() {
         currentVideo.pause()
       }
     }
-    
+
     // Clear video error and loading state when changing media
     setVideoError(null)
     setVideoLoading(false)
@@ -411,15 +417,16 @@ export function ReelsContent() {
                     className="mt-2"
                     checked={m.show_reel === true}
                     onChange={async (e) => {
+                      const checked = e.target.checked
                       await fetch(`/api/reel/${m.id}`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ show_reel: e.target.checked }),
+                        body: JSON.stringify({ show_reel: checked }),
                       })
                       await fetchReels()
                       setAllMedia((prev) =>
                         prev.map((item) =>
-                          item.id === m.id ? { ...item, show_reel: e.target.checked } : item
+                          item.id === m.id ? { ...item, show_reel: checked } : item
                         )
                       )
                     }}

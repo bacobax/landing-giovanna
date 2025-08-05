@@ -4,7 +4,6 @@ import path from "path";
 import fs from "fs";
 import { getVideoById } from "@/lib/store-utils";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 // @ts-expect-error: the normal type I would have assigned to params arg was recognized as type error by nextjs
 export async function GET(request: NextRequest, { params }) {
   const { fileid } = params;
@@ -82,7 +81,6 @@ export async function GET(request: NextRequest, { params }) {
 //     fs.unlinkSync(filePath);
 //     return NextResponse.json({ success: true });
   
-//     // eslint-disable-next-line @typescript-eslint/no-unused-vars
 //   } catch (err) {
 //     return NextResponse.json({ error: "Failed to delete file" }, { status: 500 });
 //   }
@@ -109,7 +107,6 @@ export async function GET(request: NextRequest, { params }) {
 //   try {
 //     fs.writeFileSync(filePath, buffer);
 //     return NextResponse.json({ success: true });
-//     // eslint-disable-next-line @typescript-eslint/no-unused-vars
 //   } catch (err) {
 //     return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
 //   }

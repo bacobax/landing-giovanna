@@ -145,21 +145,7 @@ export function GalleryContent() {
     fetchImages();
   }, []);
 
-  // Add useEffect to handle post-upload actions
-  useEffect(() => {
-    if (formState?.success) {
-      fetchImages();
-      setNewImage({
-        title: "",
-        medium: "",
-        year: "",
-        description: "",
-        file: null,
-        alt: "",
-      });
-      setAddingNew(false); // Optionally close the form after upload
-    }
-  }, [formState?.success]);
+
 
   if (loading) {
     return (

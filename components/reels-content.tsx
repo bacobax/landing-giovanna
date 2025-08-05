@@ -131,7 +131,7 @@ export function ReelsContent() {
 
   useEffect(() => {
     // Handle video playback
-    if (!isMounted || reelsMedia.length === 0 || !reelsMedia[currentIndex]) return
+    if (!isMounted || reelsMedia.length === 0 || reelsMedia[currentIndex]===undefined) return
 
     const currentMedia = reelsMedia[currentIndex]
     const currentVideo = videoRefs.current[currentMedia.id]
@@ -170,35 +170,36 @@ export function ReelsContent() {
     )
   }
 
-  if (!currentMedia) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="text-gray-600">Nessun media disponibile.</div>
-      </div>
-    )
-  }
+  // if (!currentMedia) {
+  //   return (
+  //     <div className="flex justify-center py-12">
+  //       <div className="text-gray-600">Nessun media disponibile.</div>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="space-y-8">
       {session && (
-        <div className="text-right">
+        <div className="w-full flex justify-center">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
+            className="flex items-center space-x-2 text-sm font-medium shadow-sm"
             onClick={() => {
               const open = !menuOpen
               setMenuOpen(open)
               if (open) fetchAllMedia()
             }}
           >
-            Gestisci reels
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+            <span>Gestione contenuti Reels</span>
           </Button>
         </div>
       )}
-      <p className="text-lg text-center max-w-2xl mx-auto text-gray-700">
-          Scorri attraverso il mio percorso artistico con questa esperienza visiva interattiva
-      </p>
-      
+      {currentMedia ? <>
       <div 
         ref={containerRef}
         className="relative h-[80vh] max-h-[600px] w-full max-w-md mx-auto bg-black rounded-2xl overflow-hidden shadow-2xl"
@@ -355,7 +356,10 @@ export function ReelsContent() {
         <p className="text-xs">
           {currentIndex + 1} of {reelsMedia.length}
         </p>
-      </div>
+      </div></>:
+      <div className="flex justify-center py-12">
+        <div className="text-gray-600">Nessun media disponibile.</div>
+      </div>}
       {menuOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded max-h-[80vh] overflow-y-auto">

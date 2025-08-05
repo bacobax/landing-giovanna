@@ -4,14 +4,14 @@ import { getImages } from "@/lib/store-utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { addImage } from "@/lib/store-utils";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import { uploadBuffer } from "@/lib/drive_actions";
 
-export async function GET() {
-    const images = await getImages();
-
-    return NextResponse.json(images);
+export async function GET(req: NextRequest) {
+  const includeAll = req.nextUrl.searchParams.get("all") === "1";
+  const images = await getImages(includeAll);
+  return NextResponse.json(images);
 }
 
 export async function POST(req: NextRequest) {
@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
     const description = (formData.get('description') as string) || file.name;
     const medium = (formData.get('medium') as string) || file.name;
     const year = (formData.get('year') as string) || file.name;
+    const showReel = formData.get('show_reel') === 'true';
+    const reelOnly = formData.get('reel_only') === 'true';
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -79,6 +81,8 @@ export async function POST(req: NextRequest) {
       description,
       medium,
       year,
+      show_reel: showReel,
+      reel_only: reelOnly,
     });
     return NextResponse.json({ success: true, fileId: driveId });
 }

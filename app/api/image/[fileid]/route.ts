@@ -5,7 +5,6 @@ import { deleteImage, getImageById } from "@/lib/store-utils";
 import { downloadStream, deleteFile as deleteDriveFile, updateFile as updateDriveFile } from "@/lib/drive_actions";
 import sharp from "sharp";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 // @ts-expect-error: the normal type i wuld have assigned to params arg was recognized as type error by nextjs
 export async function GET(_: NextRequest, { params }) {
   const { fileid } = await params;

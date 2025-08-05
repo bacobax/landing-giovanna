@@ -8,13 +8,18 @@ export type ImageRecord = {
   description: string;
   medium: string;
   year: string;
+  show_reel?: boolean;
+  reel_only?: boolean;
 };
 
 const collectionName = "images";
 
-export const getImages = async (): Promise<ImageRecord[]> => {
+export const getImages = async (includeReelOnly = false): Promise<ImageRecord[]> => {
   const collection = await getCollection<ImageRecord>(collectionName);
-  return collection.find({ medium: "image" }).toArray();
+  const filter = includeReelOnly
+    ? { medium: "image" }
+    : { medium: "image", $or: [{ reel_only: { $ne: true } }, { reel_only: { $exists: false } }] };
+  return collection.find(filter).toArray();
 };
 
 export const getImageById = async (id: string): Promise<ImageRecord | undefined> => {
@@ -45,13 +50,32 @@ export const deleteImage = async (id: string): Promise<ImageRecord | null> => {
   return result ?? null;
 };
 
-export const getVideos = async (): Promise<ImageRecord[]> => {
+export const getVideos = async (includeReelOnly = false): Promise<ImageRecord[]> => {
   const collection = await getCollection<ImageRecord>(collectionName);
-  return collection.find({ medium: "video" }).toArray();
+  const filter = includeReelOnly
+    ? { medium: "video" }
+    : { medium: "video", $or: [{ reel_only: { $ne: true } }, { reel_only: { $exists: false } }] };
+  return collection.find(filter).toArray();
 };
 
 export const getVideoById = async (id: string): Promise<ImageRecord | undefined> => {
   const collection = await getCollection<ImageRecord>(collectionName);
   const video = await collection.findOne({ id, medium: "video" });
   return video ?? undefined;
+};
+
+export const setShowReel = async (id: string, show: boolean): Promise<void> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  await collection.updateOne({ id }, { $set: { show_reel: show } });
+};
+
+export const getReelMedia = async (): Promise<ImageRecord[]> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  return collection.find({ show_reel: true }).toArray();
+};
+
+export const addVideo = async (video: ImageRecord): Promise<void> => {
+  video.medium = "video";
+  const collection = await getCollection<ImageRecord>(collectionName);
+  await collection.insertOne(video);
 };

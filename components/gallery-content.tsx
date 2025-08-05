@@ -116,11 +116,28 @@ export function GalleryContent() {
       const res = await fetch("/api/image");
       const data = await res.json();
       setImages(data);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
       setImages([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function updateTags(id: string, gallery: boolean, reels: boolean) {
+    try {
+      await fetch(`/api/image/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          show_reel: reels,
+          reel_only: reels && !gallery,
+        }),
+      });
+      fetchImages();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
+      /* ignore errors */
     }
   }
 
@@ -195,40 +212,64 @@ export function GalleryContent() {
                   Scopri di più
                 </Button>
                 {session && (
-                  <div className="flex gap-2 mt-2">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={async () => {
-                        if (confirm("Sei sicuro di voler eliminare questa immagine?")) {
-                          const res = await fetch(`/api/image/${image.id}`, { method: "DELETE" });
-                          if (res.ok) fetchImages();
-                        }
-                      }}
-                    >
-                      Elimina
-                    </Button>
-                    <label className="inline-block">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const formData = new FormData();
-                          formData.append("file", file);
-                          const res = await fetch(`/api/image/${image.id}`, {
-                            method: "PUT",
-                            body: formData,
-                          });
-                          if (res.ok) fetchImages();
+                  <div className="flex flex-col gap-2 mt-2">
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={!image.reel_only}
+                          onChange={(e) =>
+                            updateTags(image.id, e.target.checked, image.show_reel === true)
+                          }
+                        />
+                        Gallery
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={image.show_reel === true}
+                          onChange={(e) =>
+                            updateTags(image.id, !image.reel_only, e.target.checked)
+                          }
+                        />
+                        Reels
+                      </label>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          if (confirm("Sei sicuro di voler eliminare questa immagine?")) {
+                            const res = await fetch(`/api/image/${image.id}`, { method: "DELETE" });
+                            if (res.ok) fetchImages();
+                          }
                         }}
-                      />
-                      <Button asChild variant="secondary" size="sm">
-                        <span>Modifica</span>
+                      >
+                        Elimina
                       </Button>
-                    </label>
+                      <label className="inline-block">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const formData = new FormData();
+                            formData.append("file", file);
+                            const res = await fetch(`/api/image/${image.id}`, {
+                              method: "PUT",
+                              body: formData,
+                            });
+                            if (res.ok) fetchImages();
+                          }}
+                        />
+                        <Button asChild variant="secondary" size="sm">
+                          <span>Modifica</span>
+                        </Button>
+                      </label>
+                    </div>
                   </div>
                 )}
               </CardContent>

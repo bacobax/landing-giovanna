@@ -1,7 +1,9 @@
 // app/api/image/[filename]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { deleteImage, getImageById } from "@/lib/store-utils";
+import { deleteImage, getImageById, updateImage } from "@/lib/store-utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { downloadStream, deleteFile as deleteDriveFile, updateFile as updateDriveFile } from "@/lib/drive_actions";
 import sharp from "sharp";
 
@@ -81,4 +83,27 @@ export async function PUT(request: NextRequest, { params }) {
   } catch {
     return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
   }
+}
+
+// @ts-expect-error: the normal type I would have assigned to params arg was recognized as type error by nextjs
+export async function PATCH(req: NextRequest, { params }) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { fileid } = await params;
+  const existing = await getImageById(fileid);
+  if (!existing) {
+    return NextResponse.json({ error: "Image not found" }, { status: 404 });
+  }
+  const body = await req.json();
+  const updated = {
+    ...existing,
+    show_reel:
+      typeof body.show_reel === "boolean" ? body.show_reel : existing.show_reel,
+    reel_only:
+      typeof body.reel_only === "boolean" ? body.reel_only : existing.reel_only,
+  };
+  await updateImage(updated);
+  return NextResponse.json({ success: true });
 }

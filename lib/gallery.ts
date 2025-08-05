@@ -11,6 +11,8 @@ export interface GalleryImage {
   year: string
   data?: string // base64 image data
   contentType?: string // MIME type
+  show_reel?: boolean
+  reel_only?: boolean
 }
 
 export function getGalleryImages(): GalleryImage[] {

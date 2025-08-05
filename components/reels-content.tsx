@@ -149,13 +149,13 @@ export function ReelsContent() {
     )
   }
 
-  if (!currentMedia) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="text-gray-600">Nessun media disponibile.</div>
-      </div>
-    )
-  }
+  // if (!currentMedia) {
+  //   return (
+  //     <div className="flex justify-center py-12">
+  //       <div className="text-gray-600">Nessun media disponibile.</div>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="space-y-8">
@@ -178,7 +178,7 @@ export function ReelsContent() {
           Scorri attraverso il mio percorso artistico con questa esperienza visiva interattiva
       </p>
       
-      <div 
+      {currentMedia &&<><div 
         ref={containerRef}
         className="relative h-[80vh] max-h-[600px] w-full max-w-md mx-auto bg-black rounded-2xl overflow-hidden shadow-2xl"
       >
@@ -334,7 +334,7 @@ export function ReelsContent() {
         <p className="text-xs">
           {currentIndex + 1} of {reelsMedia.length}
         </p>
-      </div>
+      </div></>}
       {menuOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded max-h-[80vh] overflow-y-auto">

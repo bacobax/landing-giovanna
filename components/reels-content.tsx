@@ -31,7 +31,6 @@ export function ReelsContent() {
   const [reelsMedia, setReelsMedia] = useState<ReelMedia[]>([])
   const [allMedia, setAllMedia] = useState<ReelMedia[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
-  const [uploadFile, setUploadFile] = useState<File | null>(null)
 
   const fetchReels = async () => {
     const res = await fetch("/api/reel")
@@ -361,37 +360,6 @@ export function ReelsContent() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded max-h-[80vh] overflow-y-auto">
             <h2 className="text-lg mb-4">Seleziona media da mostrare</h2>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault()
-                if (!uploadFile) return
-                const form = new FormData()
-                form.append("file", uploadFile)
-                form.append("title", uploadFile.name)
-                form.append("description", uploadFile.name)
-                form.append("year", new Date().getFullYear().toString())
-                form.append("show_reel", "true")
-                form.append("reel_only", "true")
-                const isVideo = uploadFile.type.startsWith("video")
-                await fetch(isVideo ? "/api/video" : "/api/image", {
-                  method: "POST",
-                  body: form,
-                })
-                setUploadFile(null)
-                await fetchReels()
-                await fetchAllMedia()
-              }}
-              className="mb-4 space-y-2"
-            >
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-              />
-              <Button type="submit" size="sm" disabled={!uploadFile}>
-                Carica nuovo media
-              </Button>
-            </form>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {allMedia.map((m) => (
                 <label key={m.id} className="flex flex-col items-center">

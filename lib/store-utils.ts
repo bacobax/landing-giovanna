@@ -36,13 +36,13 @@ export const updateImage = async (image: ImageRecord): Promise<ImageRecord | nul
     { $set: image },
     { returnDocument: "before" }
   );
-  return result.value ?? null;
+  return result ?? null;
 };
 
 export const deleteImage = async (id: string): Promise<ImageRecord | null> => {
   const collection = await getCollection<ImageRecord>(collectionName);
   const result = await collection.findOneAndDelete({ id, medium: "image" });
-  return result.value ?? null;
+  return result ?? null;
 };
 
 export const getVideos = async (): Promise<ImageRecord[]> => {

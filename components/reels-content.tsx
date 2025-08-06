@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
 import { ChevronUp, ChevronDown, Play, Pause, ChevronUp as ExpandIcon, ChevronDown as CollapseIcon } from "lucide-react"
-import { useSession } from "next-auth/react"
-import { Button } from "@/components/ui/button"
 
 interface ReelMedia {
   id: string
@@ -27,10 +25,7 @@ export function ReelsContent() {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
-  const { data: session } = useSession()
   const [reelsMedia, setReelsMedia] = useState<ReelMedia[]>([])
-  const [allMedia, setAllMedia] = useState<ReelMedia[]>([])
-  const [menuOpen, setMenuOpen] = useState(false)
 
   const fetchReels = async () => {
     const res = await fetch("/api/reel")
@@ -39,15 +34,6 @@ export function ReelsContent() {
     setCurrentIndex((prev) =>
       data.length > 0 ? Math.min(prev, data.length - 1) : 0
     )
-  }
-
-  const fetchAllMedia = async () => {
-    const [imgsRes, vidsRes] = await Promise.all([
-      fetch("/api/image?all=1"),
-      fetch("/api/video?all=1"),
-    ])
-    const [imgs, vids] = await Promise.all([imgsRes.json(), vidsRes.json()])
-    setAllMedia([...imgs, ...vids])
   }
 
   const nextReel = useCallback(() => {
@@ -180,27 +166,9 @@ export function ReelsContent() {
 
   return (
     <div className="space-y-8">
-      {session && (
-        <div className="w-full flex justify-center">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex items-center space-x-2 text-sm font-medium shadow-sm"
-            onClick={() => {
-              const open = !menuOpen
-              setMenuOpen(open)
-              if (open) fetchAllMedia()
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-            </svg>
-            <span>Gestione contenuti Reels</span>
-          </Button>
-        </div>
-      )}
-      {currentMedia ? <>
-      <div 
+      {currentMedia ? (
+        <>
+      <div
         ref={containerRef}
         className="relative h-[80vh] max-h-[600px] w-full max-w-md mx-auto bg-black rounded-2xl overflow-hidden shadow-2xl"
       >
@@ -356,63 +324,12 @@ export function ReelsContent() {
         <p className="text-xs">
           {currentIndex + 1} of {reelsMedia.length}
         </p>
-      </div></>:
+      </div>
+      </>
+      ) : (
       <div className="flex justify-center py-12">
         <div className="text-gray-600">Nessun media disponibile.</div>
-      </div>}
-      {menuOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded max-h-[80vh] overflow-y-auto">
-            <h2 className="text-lg mb-4">Seleziona media da mostrare</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {allMedia.map((m) => (
-                <label key={m.id} className="flex flex-col items-center">
-                  {m.medium === "image" ? (
-                    <Image
-                      src={`/api/image/${m.id}`}
-                      alt={m.alt}
-                      width={100}
-                      height={100}
-                      className="object-cover"
-                    />
-                  ) : (
-                    <video
-                      src={`/api/video/${m.id}`}
-                      className="w-[100px] h-[100px] object-cover"
-                      muted
-                      loop
-                      playsInline
-                    />
-                  )}
-                  <input
-                    type="checkbox"
-                    className="mt-2"
-                    checked={m.show_reel === true}
-                    onChange={async (e) => {
-                      const checked = e.target.checked
-                      await fetch(`/api/reel/${m.id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ show_reel: checked }),
-                      })
-                      await fetchReels()
-                      setAllMedia((prev) =>
-                        prev.map((item) =>
-                          item.id === m.id ? { ...item, show_reel: checked } : item
-                        )
-                      )
-                    }}
-                  />
-                </label>
-              ))}
-            </div>
-            <div className="mt-4 text-right">
-              <Button size="sm" onClick={() => setMenuOpen(false)}>
-                Chiudi
-              </Button>
-            </div>
-          </div>
-        </div>
+      </div>
       )}
     </div>
   )

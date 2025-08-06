@@ -99,6 +99,11 @@ export async function PATCH(req: NextRequest, { params }) {
   const body = await req.json();
   const updated = {
     ...existing,
+    title: typeof body.title === "string" ? body.title : existing.title,
+    description:
+      typeof body.description === "string" ? body.description : existing.description,
+    alt: typeof body.alt === "string" ? body.alt : existing.alt,
+    year: typeof body.year === "string" ? body.year : existing.year,
     show_reel:
       typeof body.show_reel === "boolean" ? body.show_reel : existing.show_reel,
     reel_only:

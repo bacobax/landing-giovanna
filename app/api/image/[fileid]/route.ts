@@ -103,6 +103,11 @@ export async function PATCH(req: NextRequest, { params }) {
       typeof body.show_reel === "boolean" ? body.show_reel : existing.show_reel,
     reel_only:
       typeof body.reel_only === "boolean" ? body.reel_only : existing.reel_only,
+    title: typeof body.title === "string" ? body.title : existing.title,
+    description:
+      typeof body.description === "string" ? body.description : existing.description,
+    alt: typeof body.alt === "string" ? body.alt : existing.alt,
+    year: typeof body.year === "string" ? body.year : existing.year,
   };
   await updateImage(updated);
   return NextResponse.json({ success: true });

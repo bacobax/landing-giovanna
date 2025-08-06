@@ -36,6 +36,8 @@ export function AdminMediaManager() {
   const [media, setMedia] = useState<DraftItem[]>([])
   const [loading, setLoading] = useState(true)
   const [loadedPreview, setLoadedPreview] = useState<{ [key: string]: boolean }>({})
+  // cache buster to force refresh of previews when media changes
+  const [cacheBuster, setCacheBuster] = useState(Date.now())
   const fileInputs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   useEffect(() => {
@@ -53,6 +55,8 @@ export function AdminMediaManager() {
     const [imgs, vids] = await Promise.all([imgsRes.json(), vidsRes.json()])
     setMedia([...imgs, ...vids])
     setLoading(false)
+    // update cache buster to avoid showing stale previews
+    setCacheBuster(Date.now())
   }
 
   const visibilityValue = (item: MediaItem) => {
@@ -151,7 +155,7 @@ export function AdminMediaManager() {
                   {!loadedPreview[item.id] && <Skeleton className="absolute inset-0 h-full w-full" />}
                   {item.medium === "image" ? (
                     <Image
-                      src={`/api/image/${item.id}`}
+                      src={`/api/image/${item.id}?cb=${cacheBuster}`}
                       alt={item.alt}
                       fill
                       className="object-cover"
@@ -161,7 +165,7 @@ export function AdminMediaManager() {
                     />
                   ) : (
                     <video
-                      src={`/api/video/${item.id}`}
+                      src={`/api/video/${item.id}?cb=${cacheBuster}`}
                       className="w-full h-full object-cover"
                       controls
                       onLoadedData={() =>

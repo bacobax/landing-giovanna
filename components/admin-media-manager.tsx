@@ -49,6 +49,9 @@ export function AdminMediaManager() {
   const [loadedPreview, setLoadedPreview] = useState<{ [key: string]: boolean }>({})
   // cache buster to force refresh of previews when media changes
   const [cacheBuster, setCacheBuster] = useState(Date.now())
+  const [savingItems, setSavingItems] = useState<{ [key: string]: boolean }>({})
+  const [deletingItems, setDeletingItems] = useState<{ [key: string]: boolean }>({})
+  const [addingNew, setAddingNew] = useState(false)
   const fileInputs = useRef<{ [key: string]: HTMLInputElement | null }>({})
   const newFileInput = useRef<HTMLInputElement | null>(null)
 
@@ -128,56 +131,71 @@ export function AdminMediaManager() {
   }
 
   const saveItem = async (item: DraftItem) => {
-    await fetch(`/api/${item.medium}/${item.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: item.title,
-        description: item.description,
-        year: item.year,
-        alt: item.alt,
-        show_reel: item.show_reel,
-        reel_only: item.reel_only,
-      }),
-    })
-
-    if (item.file) {
-      const formData = new FormData()
-      formData.append("file", item.file)
+    setSavingItems(prev => ({ ...prev, [item.id]: true }))
+    try {
       await fetch(`/api/${item.medium}/${item.id}`, {
-        method: "PUT",
-        body: formData,
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: item.title,
+          description: item.description,
+          year: item.year,
+          alt: item.alt,
+          show_reel: item.show_reel,
+          reel_only: item.reel_only,
+        }),
       })
+
+      if (item.file) {
+        const formData = new FormData()
+        formData.append("file", item.file)
+        await fetch(`/api/${item.medium}/${item.id}`, {
+          method: "PUT",
+          body: formData,
+        })
+      }
+      await fetchAll()
+      window.dispatchEvent(new Event("mediaUpdated"))
+    } finally {
+      setSavingItems(prev => ({ ...prev, [item.id]: false }))
     }
-    await fetchAll()
-    window.dispatchEvent(new Event("mediaUpdated"))
   }
 
   const addNewMedia = async () => {
     if (!newItem.file) return
-    const formData = new FormData()
-    formData.append("file", newItem.file)
-    formData.append("alt", newItem.alt)
-    formData.append("title", newItem.title)
-    formData.append("description", newItem.description)
-    formData.append("year", newItem.year)
-    formData.append("show_reel", String(newItem.show_reel))
-    formData.append("reel_only", String(newItem.reel_only))
-    await fetch(`/api/${newItem.medium}`, {
-      method: "POST",
-      body: formData,
-    })
-    setNewItem(emptyNewItem)
-    if (newFileInput.current) newFileInput.current.value = ""
-    await fetchAll()
-    window.dispatchEvent(new Event("mediaUpdated"))
+    setAddingNew(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", newItem.file)
+      formData.append("alt", newItem.alt)
+      formData.append("title", newItem.title)
+      formData.append("description", newItem.description)
+      formData.append("year", newItem.year)
+      formData.append("show_reel", String(newItem.show_reel))
+      formData.append("reel_only", String(newItem.reel_only))
+      await fetch(`/api/${newItem.medium}`, {
+        method: "POST",
+        body: formData,
+      })
+      setNewItem(emptyNewItem)
+      if (newFileInput.current) newFileInput.current.value = ""
+      await fetchAll()
+      window.dispatchEvent(new Event("mediaUpdated"))
+    } finally {
+      setAddingNew(false)
+    }
   }
 
   const deleteItem = async (item: DraftItem) => {
     if (!confirm("Sei sicuro di voler eliminare questo media?")) return
-    await fetch(`/api/${item.medium}/${item.id}`, { method: "DELETE" })
-    await fetchAll()
-    window.dispatchEvent(new Event("mediaUpdated"))
+    setDeletingItems(prev => ({ ...prev, [item.id]: true }))
+    try {
+      await fetch(`/api/${item.medium}/${item.id}`, { method: "DELETE" })
+      await fetchAll()
+      window.dispatchEvent(new Event("mediaUpdated"))
+    } finally {
+      setDeletingItems(prev => ({ ...prev, [item.id]: false }))
+    }
   }
 
   if (!session) return null
@@ -289,8 +307,8 @@ export function AdminMediaManager() {
                   </Button>
                   {newItem.file && <span className="text-xs text-gray-600">{newItem.file.name}</span>}
                 </div>
-                <Button onClick={addNewMedia} className="mt-2" disabled={!newItem.file}>
-                  Aggiungi
+                <Button onClick={addNewMedia} className="mt-2" disabled={!newItem.file || addingNew}>
+                  {addingNew ? "Aggiungendo..." : "Aggiungi"}
                 </Button>
               </CardContent>
             </Card>
@@ -382,9 +400,18 @@ export function AdminMediaManager() {
                     {item.file && <span className="text-xs text-gray-600">{item.file.name}</span>}
                   </div>
                   <div className="flex gap-2 mt-2">
-                    <Button onClick={() => saveItem(item)}>Salva</Button>
-                    <Button variant="destructive" onClick={() => deleteItem(item)}>
-                      Elimina
+                    <Button 
+                      onClick={() => saveItem(item)} 
+                      disabled={savingItems[item.id]}
+                    >
+                      {savingItems[item.id] ? "Salvando..." : "Salva"}
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => deleteItem(item)}
+                      disabled={deletingItems[item.id]}
+                    >
+                      {deletingItems[item.id] ? "Eliminando..." : "Elimina"}
                     </Button>
                   </div>
                 </CardContent>

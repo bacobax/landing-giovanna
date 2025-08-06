@@ -173,7 +173,7 @@ export function CursorFollower() {
         className={`fixed pointer-events-none z-50 backdrop-blur-sm border border-white/30 shadow-lg ${
           cursorVisible 
             ? isHoveringInteractive
-              ? 'w-8 h-8 bg-gradient-to-br from-gray-700/50 to-brown-500/50' // Darker colors when hovering interactive
+              ? 'w-4 h-4 bg-gradient-to-br from-gray-700/50 to-brown-500/50' // Darker colors when hovering interactive
               : 'w-10 h-10 bg-gradient-to-br from-primary-tan/40 to-accent-pink/40'
             : 'w-10 h-10 bg-gradient-to-br from-primary-tan/70 to-accent-pink/70'
         }`}
@@ -189,7 +189,7 @@ export function CursorFollower() {
         ref={follower2Ref}
         className={`fixed pointer-events-none z-40 backdrop-blur-sm border border-white/20 shadow-md ${
           isHoveringInteractive
-            ? 'bg-gradient-to-br w-7 h-7 from-gray-600/50 to-brown-400/50' // Darker colors when hovering interactive
+            ? 'bg-gradient-to-br w-2 h-2 from-gray-600/50 to-brown-400/50' // Darker colors when hovering interactive
             : 'bg-gradient-to-br w-8 h-8 from-primary-tan/30 to-accent-pink/30'
         }`}
         style={{
@@ -204,7 +204,7 @@ export function CursorFollower() {
         ref={follower3Ref}
         className={`fixed pointer-events-none z-30backdrop-blur-sm border border-white/10 shadow-sm ${
           isHoveringInteractive
-            ? 'bg-gradient-to-br w-5 h-5 from-gray-500/50 to-brown-300/50' // Darker colors when hovering interactive
+            ? 'bg-gradient-to-br w-1 h-1 from-gray-500/50 to-brown-300/50' // Darker colors when hovering interactive
             : 'bg-gradient-to-br w-6 h-6  from-primary-tan/20 to-accent-pink/20'
         }`}
         style={{

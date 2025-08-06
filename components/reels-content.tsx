@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronUp, ChevronDown, Play, Pause, ChevronUp as ExpandIcon, ChevronDown as CollapseIcon } from "lucide-react"
 
 interface ReelMedia {
@@ -21,6 +22,7 @@ export function ReelsContent() {
   const [isAutoPlay, setIsAutoPlay] = useState(true)
   const [videoError, setVideoError] = useState<string | null>(null)
   const [videoLoading, setVideoLoading] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -120,6 +122,10 @@ export function ReelsContent() {
   }, [isAutoPlay, reelsMedia.length, isMounted, currentIndex, reelsMedia])
 
   useEffect(() => {
+    setImageLoaded(false)
+  }, [currentIndex])
+
+  useEffect(() => {
     // Handle video playback
     if (!isMounted || reelsMedia.length === 0 || reelsMedia[currentIndex]===undefined) return
 
@@ -178,13 +184,19 @@ export function ReelsContent() {
         {/* Current Media Display */}
         <div className="relative w-full h-full">
           {currentMedia.medium === "image" ? (
-            <Image
-              src={`/api/image/${currentMedia.id}`}
-              alt={currentMedia.alt}
-              fill
-              className="object-cover"
-              priority
-            />
+            <>
+              {!imageLoaded && (
+                <Skeleton className="absolute inset-0 h-full w-full" />
+              )}
+              <Image
+                src={`/api/image/${currentMedia.id}`}
+                alt={currentMedia.alt}
+                fill
+                onLoadingComplete={() => setImageLoaded(true)}
+                className="object-cover"
+                priority
+              />
+            </>
           ) : (
             <>
               <video

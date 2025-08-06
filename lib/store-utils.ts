@@ -79,3 +79,9 @@ export const addVideo = async (video: ImageRecord): Promise<void> => {
   const collection = await getCollection<ImageRecord>(collectionName);
   await collection.insertOne(video);
 };
+
+export const deleteVideo = async (id: string): Promise<ImageRecord | null> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  const result = await collection.findOneAndDelete({ id, medium: "video" });
+  return result ?? null;
+};

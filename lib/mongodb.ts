@@ -9,6 +9,8 @@ async function getClient(): Promise<MongoClient> {
     throw new Error("ATLAS_PSW environment variable not set");
   }
   const uri = `mongodb+srv://quicksolver02:${password}@bacobaxcluster.dympued.mongodb.net/?retryWrites=true&w=majority&appName=bacobaxcluster`;
+  
+  console.log(uri);
   client = new MongoClient(uri);
   await client.connect();
   return client;

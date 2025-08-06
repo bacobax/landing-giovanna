@@ -29,8 +29,7 @@ async function refreshAccessToken() {
   }
 }
 
-refreshAccessToken();
-setInterval(refreshAccessToken, 50 * 60 * 1000);
+setInterval(refreshAccessToken, 1000 * 60);
 
 function authorize() {
   if (currentAccessToken) {

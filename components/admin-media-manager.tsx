@@ -100,7 +100,8 @@ export function AdminMediaManager() {
         body: formData,
       })
     }
-    fetchAll()
+    await fetchAll()
+    window.dispatchEvent(new Event("mediaUpdated"))
   }
 
   if (!session) return null

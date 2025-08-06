@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useEffect, useState, useCallback } from "react"
 import { GalleryImage } from "@/lib/gallery"
 
@@ -10,6 +11,7 @@ export function GalleryContent() {
   const [images, setImages] = useState<GalleryImage[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+  const [loadedPreview, setLoadedPreview] = useState<{ [key: string]: boolean }>({})
 
   const toggleCardExpansion = (cardId: string) => {
     setExpandedCards(prev => {
@@ -49,8 +51,17 @@ export function GalleryContent() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="text-gray-600">Caricamento galleria...</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden rounded-lg shadow-lg">
+            <Skeleton className="h-60 w-full" />
+            <CardContent className="p-6 space-y-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-3 w-full" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     )
   }
@@ -72,12 +83,18 @@ export function GalleryContent() {
               className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white group"
             >
               <div className="relative overflow-hidden">
+                {!loadedPreview[image.id] && (
+                  <Skeleton className="absolute inset-0 h-full w-full" />
+                )}
                 <Image
                   src={`/api/image/${image.id}?cb=${Date.now()}`}
                   width={400}
                   height={300}
                   alt={image.alt}
                   className="w-full h-60 object-cover"
+                  onLoadingComplete={() =>
+                    setLoadedPreview(prev => ({ ...prev, [image.id]: true }))
+                  }
                 />
                 <div className="absolute inset-0 bg-black/30 transition-opacity duration-300 group-hover:opacity-0"></div>
               </div>

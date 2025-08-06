@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronUp, ChevronDown, Play, Pause, ChevronUp as ExpandIcon, ChevronDown as CollapseIcon } from "lucide-react"
 
 interface ReelMedia {
@@ -21,6 +22,7 @@ export function ReelsContent() {
   const [isAutoPlay, setIsAutoPlay] = useState(true)
   const [videoError, setVideoError] = useState<string | null>(null)
   const [videoLoading, setVideoLoading] = useState(false)
+  const [mediaLoaded, setMediaLoaded] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -151,6 +153,10 @@ export function ReelsContent() {
   const currentMedia = reelsMedia[currentIndex]
   const isDescriptionLong = currentMedia ? currentMedia.description.length > 150 : false
 
+  useEffect(() => {
+    setMediaLoaded(false)
+  }, [currentIndex])
+
   // Don't render until mounted to prevent hydration mismatch
   if (!isMounted) {
     return (
@@ -170,70 +176,81 @@ export function ReelsContent() {
 
   return (
     <div className="space-y-8">
-      {currentMedia ? <>
-      <div 
-        ref={containerRef}
-        className="relative h-[80vh] max-h-[600px] w-full max-w-md mx-auto bg-black rounded-2xl overflow-hidden shadow-2xl"
-      >
-        {/* Current Media Display */}
-        <div className="relative w-full h-full">
-          {currentMedia.medium === "image" ? (
-            <Image
-              src={`/api/image/${currentMedia.id}`}
-              alt={currentMedia.alt}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <>
-              <video
-                ref={(el) => {
-                  videoRefs.current[currentMedia.id] = el
-                }}
-                src={`/api/video/${currentMedia.id}`}
-                className="w-full h-full object-cover"
-                loop
-                muted
-                playsInline
-                controls={false}
-                preload="metadata"
-                onLoadStart={() => setVideoLoading(true)}
-                onLoadedData={() => {
-                  setVideoLoading(false)
-                  const video = videoRefs.current[currentMedia.id]
-                  if (video && isPlaying) {
-                    video.play().catch(console.log)
-                  }
-                }}
-                onError={(e) => {
-                  console.log("Video error:", e)
-                  setVideoLoading(false)
-                  setVideoError("Impossibile caricare il video. Per favore, prova a ricaricare la pagina.")
-                }}
-              >
-                <source src={`/api/video/${currentMedia.id}`} type="video/mp4" />
-                Il tuo browser non supporta il tag video.
-              </video>
-
-              {/* Loading indicator */}
-              {videoLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                  <div className="text-white text-lg">Caricamento video...</div>
-                </div>
+      {currentMedia ? (
+        <>
+          <div
+            ref={containerRef}
+            className="relative h-[80vh] max-h-[600px] w-full max-w-md mx-auto bg-black rounded-2xl overflow-hidden shadow-2xl"
+          >
+            {/* Current Media Display */}
+            <div className="relative w-full h-full">
+              {!mediaLoaded && (
+                <Skeleton className="absolute inset-0 h-full w-full" />
               )}
+              {currentMedia.medium === "image" ? (
+                <Image
+                  src={`/api/image/${currentMedia.id}`}
+                  alt={currentMedia.alt}
+                  fill
+                  className="object-cover"
+                  priority
+                  onLoadingComplete={() => setMediaLoaded(true)}
+                />
+              ) : (
+                <>
+                  <video
+                    ref={el => {
+                      videoRefs.current[currentMedia.id] = el
+                    }}
+                    src={`/api/video/${currentMedia.id}`}
+                    className="w-full h-full object-cover"
+                    loop
+                    muted
+                    playsInline
+                    controls={false}
+                    preload="metadata"
+                    onLoadStart={() => {
+                      setVideoLoading(true)
+                      setMediaLoaded(false)
+                    }}
+                    onLoadedData={() => {
+                      setVideoLoading(false)
+                      setMediaLoaded(true)
+                      const video = videoRefs.current[currentMedia.id]
+                      if (video && isPlaying) {
+                        video.play().catch(console.log)
+                      }
+                    }}
+                    onError={e => {
+                      console.log("Video error:", e)
+                      setVideoLoading(false)
+                      setVideoError(
+                        "Impossibile caricare il video. Per favore, prova a ricaricare la pagina."
+                      )
+                    }}
+                  >
+                    <source src={`/api/video/${currentMedia.id}`} type="video/mp4" />
+                    Il tuo browser non supporta il tag video.
+                  </video>
 
-              {/* Fallback for video errors */}
-              {videoError && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                  <div className="text-white text-center p-4">
-                    <div className="text-lg mb-2">Video non disponibile</div>
-                    <div className="text-sm opacity-75">{videoError}</div>
-                  </div>
-                </div>
+                  {/* Loading indicator */}
+                  {videoLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <div className="text-white text-lg">Caricamento video...</div>
+                    </div>
+                  )}
+
+                  {/* Fallback for video errors */}
+                  {videoError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                      <div className="text-white text-center p-4">
+                        <div className="text-lg mb-2">Video non disponibile</div>
+                        <div className="text-sm opacity-75">{videoError}</div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
-            </>
-          )}
 
           {/* Overlay with media info - now with expandable description */}
           <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-white transition-all duration-300 ${
@@ -327,10 +344,13 @@ export function ReelsContent() {
         <p className="text-xs">
           {currentIndex + 1} of {reelsMedia.length}
         </p>
-      </div></>:
-      <div className="flex justify-center py-12">
-        <div className="text-gray-600">Nessun media disponibile.</div>
-      </div>}
+      </div>
+        </>
+      ) : (
+        <div className="flex justify-center py-12">
+          <div className="text-gray-600">Nessun media disponibile.</div>
+        </div>
+      )}
     </div>
   )
 }

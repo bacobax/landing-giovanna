@@ -6,6 +6,7 @@ import { ContactSection } from "./contact-section"
 import { FooterSection } from "./footer-section"
 import { CursorFollower } from "./cursor-follower"
 import { UnifiedGallery } from "./unified-gallery"
+import { AdminMediaManager } from "./admin-media-manager"
 import { useEffect, useState } from "react"
 import { LoginModal } from "./login-modal";
 import { SessionProvider } from "next-auth/react"
@@ -36,6 +37,7 @@ export function ArtShowcase() {
         <HeroSection />
       <AboutSection />
       <UnifiedGallery />
+      <AdminMediaManager />
       <ContactSection />
       <FooterSection onAdminClick={() => setShowModal(true)} />
 

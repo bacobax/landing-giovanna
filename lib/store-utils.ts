@@ -79,3 +79,19 @@ export const addVideo = async (video: ImageRecord): Promise<void> => {
   const collection = await getCollection<ImageRecord>(collectionName);
   await collection.insertOne(video);
 };
+
+export const updateVideo = async (video: ImageRecord): Promise<ImageRecord | null> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  const result = await collection.findOneAndUpdate(
+    { id: video.id, medium: "video" },
+    { $set: video },
+    { returnDocument: "before" }
+  );
+  return result ?? null;
+};
+
+export const deleteVideo = async (id: string): Promise<ImageRecord | null> => {
+  const collection = await getCollection<ImageRecord>(collectionName);
+  const result = await collection.findOneAndDelete({ id, medium: "video" });
+  return result ?? null;
+};

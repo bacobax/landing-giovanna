@@ -217,7 +217,9 @@ export function AdminMediaManager() {
                   <div className="flex items-center gap-2">
                     <input
                       type="file"
-                      ref={el => (fileInputs.current[item.id] = el)}
+                      ref={el => {
+                        fileInputs.current[item.id] = el
+                      }}
                       onChange={e => handleFileChange(item.id, e.target.files?.[0])}
                       className="hidden"
                     />

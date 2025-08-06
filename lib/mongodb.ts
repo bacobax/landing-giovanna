@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, Document } from "mongodb";
 
 let client: MongoClient | null = null;
 
@@ -16,7 +16,7 @@ async function getClient(): Promise<MongoClient> {
   return client;
 }
 
-export async function getCollection<T>(name: string) {
+export async function getCollection<T extends Document>(name: string) {
   const client = await getClient();
   const db = client.db("gallery");
   return db.collection<T>(name);

@@ -61,7 +61,7 @@ export async function PUT(request: NextRequest, { params }) {
     return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
   }
   const arrayBuffer = await file.arrayBuffer();
-  let buffer = Buffer.from(arrayBuffer);
+  let buffer = Buffer.from(arrayBuffer as ArrayBufferLike);
   const ext = path.extname(file.name).toLowerCase();
   if (ext === ".jpg" || ext === ".jpeg") {
     buffer = await sharp(buffer).resize({ width: 1200 }).jpeg({ quality: 80 }).toBuffer();

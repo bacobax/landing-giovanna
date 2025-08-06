@@ -11,8 +11,9 @@ module.exports = {
       },
       fontFamily: {
         playfair: ["var(--font-playfair)"],
-        inter: ["var(--font-inter)"],
+        inter: ["var(--font-inter)"]
       },
+
     },
   },
   plugins: [],

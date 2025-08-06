@@ -1,4 +1,5 @@
 import { getCollection } from "./mongodb";
+import { Document } from "mongodb";
 
 export type ImageRecord = {
   id: string;
@@ -10,7 +11,7 @@ export type ImageRecord = {
   year: string;
   show_reel?: boolean;
   reel_only?: boolean;
-};
+} & Document;
 
 const collectionName = "images";
 

@@ -24,6 +24,17 @@ interface DraftItem extends MediaItem {
   file?: File
 }
 
+interface NewItem {
+  file?: File
+  medium: "image" | "video"
+  title: string
+  description: string
+  year: string
+  alt: string
+  show_reel: boolean
+  reel_only: boolean
+}
+
 const visibilityOptions = [
   { value: "gallery", label: "Solo galleria" },
   { value: "reels", label: "Solo reels" },
@@ -39,6 +50,18 @@ export function AdminMediaManager() {
   // cache buster to force refresh of previews when media changes
   const [cacheBuster, setCacheBuster] = useState(Date.now())
   const fileInputs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const newFileInput = useRef<HTMLInputElement | null>(null)
+
+  const emptyNewItem: NewItem = {
+    medium: "image",
+    title: "",
+    description: "",
+    year: "",
+    alt: "",
+    show_reel: false,
+    reel_only: false,
+  }
+  const [newItem, setNewItem] = useState<NewItem>(emptyNewItem)
 
   useEffect(() => {
     if (session) {
@@ -59,7 +82,7 @@ export function AdminMediaManager() {
     setCacheBuster(Date.now())
   }
 
-  const visibilityValue = (item: MediaItem) => {
+  const visibilityValue = (item: { show_reel?: boolean; reel_only?: boolean }) => {
     if (item.show_reel) {
       return item.reel_only ? "reels" : "both"
     }
@@ -88,6 +111,22 @@ export function AdminMediaManager() {
     setMedia(prev => prev.map(item => (item.id === id ? { ...item, file } : item)))
   }
 
+  const handleNewFieldChange = (field: keyof NewItem, value: string) => {
+    setNewItem(prev => ({ ...prev, [field]: value } as NewItem))
+  }
+
+  const handleNewVisibilityChange = (value: string) => {
+    setNewItem(prev => ({
+      ...prev,
+      show_reel: value === "reels" || value === "both",
+      reel_only: value === "reels" || value === "none",
+    }))
+  }
+
+  const handleNewFileChange = (file?: File) => {
+    setNewItem(prev => ({ ...prev, file }))
+  }
+
   const saveItem = async (item: DraftItem) => {
     await fetch(`/api/${item.medium}/${item.id}`, {
       method: "PATCH",
@@ -110,6 +149,33 @@ export function AdminMediaManager() {
         body: formData,
       })
     }
+    await fetchAll()
+    window.dispatchEvent(new Event("mediaUpdated"))
+  }
+
+  const addNewMedia = async () => {
+    if (!newItem.file) return
+    const formData = new FormData()
+    formData.append("file", newItem.file)
+    formData.append("alt", newItem.alt)
+    formData.append("title", newItem.title)
+    formData.append("description", newItem.description)
+    formData.append("year", newItem.year)
+    formData.append("show_reel", String(newItem.show_reel))
+    formData.append("reel_only", String(newItem.reel_only))
+    await fetch(`/api/${newItem.medium}`, {
+      method: "POST",
+      body: formData,
+    })
+    setNewItem(emptyNewItem)
+    if (newFileInput.current) newFileInput.current.value = ""
+    await fetchAll()
+    window.dispatchEvent(new Event("mediaUpdated"))
+  }
+
+  const deleteItem = async (item: DraftItem) => {
+    if (!confirm("Sei sicuro di voler eliminare questo media?")) return
+    await fetch(`/api/${item.medium}/${item.id}`, { method: "DELETE" })
     await fetchAll()
     window.dispatchEvent(new Event("mediaUpdated"))
   }
@@ -149,6 +215,85 @@ export function AdminMediaManager() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="overflow-hidden">
+              <CardContent className="space-y-2 p-4">
+                <h3 className="text-xl font-semibold">Aggiungi media</h3>
+                <select
+                  value={newItem.medium}
+                  onChange={e =>
+                    handleNewFieldChange("medium", e.target.value as "image" | "video")
+                  }
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                >
+                  <option value="image">Immagine</option>
+                  <option value="video">Video</option>
+                </select>
+                <Input
+                  type="text"
+                  placeholder="Titolo"
+                  value={newItem.title}
+                  onChange={e => handleNewFieldChange("title", e.target.value)}
+                />
+                <textarea
+                  placeholder="Descrizione"
+                  value={newItem.description}
+                  onChange={e => handleNewFieldChange("description", e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                />
+                <Input
+                  type="text"
+                  placeholder="Anno"
+                  value={newItem.year}
+                  onChange={e => handleNewFieldChange("year", e.target.value)}
+                />
+                <Input
+                  type="text"
+                  placeholder="Alt"
+                  value={newItem.alt}
+                  onChange={e => handleNewFieldChange("alt", e.target.value)}
+                />
+                <div className="flex flex-wrap gap-2 py-1">
+                  {visibilityOptions.map(opt => {
+                    const selected = visibilityValue(newItem) === opt.value
+                    return (
+                      <Button
+                        key={opt.value}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleNewVisibilityChange(opt.value)}
+                        className={
+                          "rounded-full px-2 py-1 text-xs " +
+                          tagStyles[opt.value] +
+                          (selected ? " ring-2 ring-offset-2 ring-gray-400" : " opacity-60")
+                        }
+                      >
+                        {opt.label}
+                      </Button>
+                    )
+                  })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={newFileInput}
+                    onChange={e => handleNewFileChange(e.target.files?.[0])}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => newFileInput.current?.click()}
+                  >
+                    {newItem.file ? "Cambiato" : "Seleziona file"}
+                  </Button>
+                  {newItem.file && <span className="text-xs text-gray-600">{newItem.file.name}</span>}
+                </div>
+                <Button onClick={addNewMedia} className="mt-2" disabled={!newItem.file}>
+                  Aggiungi
+                </Button>
+              </CardContent>
+            </Card>
             {media.map(item => (
               <Card key={item.id} className="overflow-hidden">
                 <div className="relative h-48 bg-gray-200">
@@ -236,9 +381,12 @@ export function AdminMediaManager() {
                     </Button>
                     {item.file && <span className="text-xs text-gray-600">{item.file.name}</span>}
                   </div>
-                  <Button onClick={() => saveItem(item)} className="mt-2">
-                    Salva
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button onClick={() => saveItem(item)}>Salva</Button>
+                    <Button variant="destructive" onClick={() => deleteItem(item)}>
+                      Elimina
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

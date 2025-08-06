@@ -1,0 +1,183 @@
+"use client"
+
+import { useEffect, useState, useRef } from "react"
+import Image from "next/image"
+import { useSession } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+
+interface MediaItem {
+  id: string
+  src: string
+  alt: string
+  title: string
+  description: string
+  medium: "image" | "video"
+  year: string
+  show_reel?: boolean
+  reel_only?: boolean
+}
+
+interface DraftItem extends MediaItem {
+  file?: File
+}
+
+const visibilityOptions = [
+  { value: "gallery", label: "Solo galleria" },
+  { value: "reels", label: "Solo reels" },
+  { value: "both", label: "Entrambi" },
+  { value: "none", label: "Nessuno" }
+]
+
+export function AdminMediaManager() {
+  const { data: session } = useSession()
+  const [media, setMedia] = useState<DraftItem[]>([])
+  const fileInputs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+
+  useEffect(() => {
+    if (session) {
+      fetchAll()
+    }
+  }, [session])
+
+  async function fetchAll() {
+    const [imgsRes, vidsRes] = await Promise.all([
+      fetch("/api/image?all=1"),
+      fetch("/api/video?all=1"),
+    ])
+    const [imgs, vids] = await Promise.all([imgsRes.json(), vidsRes.json()])
+    setMedia([...imgs, ...vids])
+  }
+
+  const visibilityValue = (item: MediaItem) => {
+    if (item.show_reel) {
+      return item.reel_only ? "reels" : "both"
+    }
+    return item.reel_only ? "none" : "gallery"
+  }
+
+  const handleVisibilityChange = (id: string, medium: string, value: string) => {
+    setMedia(prev =>
+      prev.map(item =>
+        item.id === id
+          ? {
+              ...item,
+              show_reel: value === "reels" || value === "both",
+              reel_only: value === "reels" || value === "none",
+            }
+          : item
+      )
+    )
+  }
+
+  const handleFieldChange = (id: string, field: keyof DraftItem, value: string) => {
+    setMedia(prev => prev.map(item => (item.id === id ? { ...item, [field]: value } : item)))
+  }
+
+  const handleFileChange = (id: string, file?: File) => {
+    setMedia(prev => prev.map(item => (item.id === id ? { ...item, file } : item)))
+  }
+
+  const saveItem = async (item: DraftItem) => {
+    await fetch(`/api/${item.medium}/${item.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: item.title,
+        description: item.description,
+        year: item.year,
+        alt: item.alt,
+        show_reel: item.show_reel,
+        reel_only: item.reel_only,
+      }),
+    })
+
+    if (item.file) {
+      const formData = new FormData()
+      formData.append("file", item.file)
+      await fetch(`/api/${item.medium}/${item.id}`, {
+        method: "PUT",
+        body: formData,
+      })
+    }
+    fetchAll()
+  }
+
+  if (!session) return null
+
+  return (
+    <section className="py-20 px-4 bg-gray-100">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <h2 className="text-3xl font-bold text-center">Gestione Media</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {media.map(item => (
+            <Card key={item.id} className="overflow-hidden">
+              <div className="relative h-48 bg-gray-200">
+                {item.medium === "image" ? (
+                  <Image
+                    src={`/api/image/${item.id}`}
+                    alt={item.alt}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <video
+                    src={`/api/video/${item.id}`}
+                    className="w-full h-full object-cover"
+                    controls
+                  />
+                )}
+              </div>
+              <CardContent className="space-y-2 p-4">
+                <input
+                  type="text"
+                  value={item.title}
+                  onChange={e => handleFieldChange(item.id, "title", e.target.value)}
+                  className="w-full border rounded px-2 py-1"
+                />
+                <textarea
+                  value={item.description}
+                  onChange={e => handleFieldChange(item.id, "description", e.target.value)}
+                  className="w-full border rounded px-2 py-1"
+                />
+                <input
+                  type="text"
+                  value={item.year}
+                  onChange={e => handleFieldChange(item.id, "year", e.target.value)}
+                  className="w-full border rounded px-2 py-1"
+                />
+                <input
+                  type="text"
+                  value={item.alt}
+                  onChange={e => handleFieldChange(item.id, "alt", e.target.value)}
+                  className="w-full border rounded px-2 py-1"
+                />
+                <select
+                  value={visibilityValue(item)}
+                  onChange={e => handleVisibilityChange(item.id, item.medium, e.target.value)}
+                  className="w-full border rounded px-2 py-1"
+                >
+                  {visibilityOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="file"
+                  ref={el => (fileInputs.current[item.id] = el)}
+                  onChange={e => handleFileChange(item.id, e.target.files?.[0])}
+                  className="w-full"
+                />
+                <Button onClick={() => saveItem(item)} className="mt-2">
+                  Salva
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+

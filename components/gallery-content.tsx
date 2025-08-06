@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useEffect, useState, useCallback } from "react"
 import { GalleryImage } from "@/lib/gallery"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function GalleryContent() {
   const [images, setImages] = useState<GalleryImage[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({})
 
   const toggleCardExpansion = (cardId: string) => {
     setExpandedCards(prev => {
@@ -71,12 +73,18 @@ export function GalleryContent() {
               key={image.id}
               className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white group"
             >
-              <div className="relative overflow-hidden">
+              <div className="relative overflow-hidden h-60">
+                {!loadedImages[image.id] && (
+                  <Skeleton className="absolute inset-0 h-full w-full" />
+                )}
                 <Image
                   src={`/api/image/${image.id}?cb=${Date.now()}`}
                   width={400}
                   height={300}
                   alt={image.alt}
+                  onLoadingComplete={() =>
+                    setLoadedImages(prev => ({ ...prev, [image.id]: true }))
+                  }
                   className="w-full h-60 object-cover"
                 />
                 <div className="absolute inset-0 bg-black/30 transition-opacity duration-300 group-hover:opacity-0"></div>

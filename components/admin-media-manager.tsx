@@ -5,6 +5,8 @@ import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
 
 interface MediaItem {
   id: string
@@ -33,6 +35,7 @@ export function AdminMediaManager() {
   const { data: session } = useSession()
   const [media, setMedia] = useState<DraftItem[]>([])
   const fileInputs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (session) {
@@ -115,12 +118,20 @@ export function AdminMediaManager() {
             <Card key={item.id} className="overflow-hidden">
               <div className="relative h-48 bg-gray-200">
                 {item.medium === "image" ? (
-                  <Image
-                    src={`/api/image/${item.id}`}
-                    alt={item.alt}
-                    fill
-                    className="object-cover"
-                  />
+                  <>
+                    {!loadedImages[item.id] && (
+                      <Skeleton className="absolute inset-0 h-full w-full" />
+                    )}
+                    <Image
+                      src={`/api/image/${item.id}`}
+                      alt={item.alt}
+                      fill
+                      onLoadingComplete={() =>
+                        setLoadedImages(prev => ({ ...prev, [item.id]: true }))
+                      }
+                      className="object-cover"
+                    />
+                  </>
                 ) : (
                   <video
                     src={`/api/video/${item.id}`}
@@ -153,23 +164,57 @@ export function AdminMediaManager() {
                   onChange={e => handleFieldChange(item.id, "alt", e.target.value)}
                   className="w-full border rounded px-2 py-1"
                 />
-                <select
-                  value={visibilityValue(item)}
-                  onChange={e => handleVisibilityChange(item.id, item.medium, e.target.value)}
-                  className="w-full border rounded px-2 py-1"
-                >
-                  {visibilityOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="file"
-                  ref={el => (fileInputs.current[item.id] = el)}
-                  onChange={e => handleFileChange(item.id, e.target.files?.[0])}
-                  className="w-full"
-                />
+                <div className="flex flex-wrap gap-2">
+                  {visibilityOptions.map(opt => {
+                    const selected = visibilityValue(item) === opt.value
+                    const colorMap: Record<string, string> = {
+                      gallery: "bg-green-500 text-white hover:bg-green-600",
+                      reels: "bg-blue-500 text-white hover:bg-blue-600",
+                      both: "bg-purple-500 text-white hover:bg-purple-600",
+                      none: "bg-gray-300 text-gray-800 hover:bg-gray-400",
+                    }
+                    const unselectedMap: Record<string, string> = {
+                      gallery: "text-green-600 border-green-600 hover:bg-green-50",
+                      reels: "text-blue-600 border-blue-600 hover:bg-blue-50",
+                      both: "text-purple-600 border-purple-600 hover:bg-purple-50",
+                      none: "text-gray-600 border-gray-600 hover:bg-gray-50",
+                    }
+                    const classes = selected
+                      ? colorMap[opt.value]
+                      : `border ${unselectedMap[opt.value]}`
+                    return (
+                      <Badge
+                        key={opt.value}
+                        onClick={() =>
+                          handleVisibilityChange(item.id, item.medium, opt.value)
+                        }
+                        className={`cursor-pointer ${classes}`}
+                      >
+                        {opt.label}
+                      </Badge>
+                    )
+                  })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={el => (fileInputs.current[item.id] = el)}
+                    onChange={e => handleFileChange(item.id, e.target.files?.[0])}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => fileInputs.current[item.id]?.click()}
+                  >
+                    Seleziona file
+                  </Button>
+                  {item.file && (
+                    <span className="text-sm text-gray-600 truncate">
+                      {item.file.name}
+                    </span>
+                  )}
+                </div>
                 <Button onClick={() => saveItem(item)} className="mt-2">
                   Salva
                 </Button>

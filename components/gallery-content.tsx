@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useEffect, useState, useCallback } from "react"
 import { GalleryImage } from "@/lib/gallery"
 
@@ -49,8 +50,17 @@ export function GalleryContent() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="text-gray-600">Caricamento galleria...</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden rounded-lg shadow-lg">
+            <Skeleton className="h-60 w-full" />
+            <CardContent className="p-6 space-y-2">
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-full" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     )
   }

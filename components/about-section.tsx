@@ -1,8 +1,11 @@
 "use client"
 
 import Image from "next/image"
+import { useState } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function AboutSection() {
+  const [loaded, setLoaded] = useState(false)
   return (
     <section id="about" className="relative py-20 px-4 bg-primary-tan text-white overflow-hidden">
       {/* Subtle background stripes */}
@@ -28,12 +31,14 @@ export function AboutSection() {
         </div>
         <div className="flex justify-center">
           <div className="w-90 h-90 rounded-full border-4 border-white shadow-xl overflow-hidden relative">
+            {!loaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
             <Image
               src="/assets/picprofile.JPG"
               width={500}
               height={500}
               alt="Artist's portrait"
               className="w-full h-full object-cover"
+              onLoadingComplete={() => setLoaded(true)}
             />
             <div className="absolute inset-0 bg-black/20 rounded-full"></div>
           </div>

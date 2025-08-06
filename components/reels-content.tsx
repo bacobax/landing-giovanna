@@ -16,10 +16,10 @@ interface ReelMedia {
   duration?: number // in seconds, for videos
 }
 
-export function ReelsContent() {
+export function ReelsContent({ isActive }: { isActive: boolean }) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(true)
-  const [isAutoPlay, setIsAutoPlay] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(isActive)
+  const [isAutoPlay, setIsAutoPlay] = useState(isActive)
   const [videoError, setVideoError] = useState<string | null>(null)
   const [videoLoading, setVideoLoading] = useState(false)
   const [mediaLoaded, setMediaLoaded] = useState(false)
@@ -65,6 +65,11 @@ export function ReelsContent() {
     if (text.length <= maxLength) return text
     return text.substring(0, maxLength).trim() + "..."
   }
+
+  useEffect(() => {
+    setIsPlaying(isActive)
+    setIsAutoPlay(isActive)
+  }, [isActive])
 
   useEffect(() => {
     setIsMounted(true)

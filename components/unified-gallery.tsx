@@ -59,17 +59,14 @@ export function UnifiedGallery() {
 
         {/* Content */}
         <div className="transition-all duration-500 ease-in-out">
-          {viewMode === "gallery" ? (
-            <div>
-              <GalleryContent />
-            </div>
-          ) : (
-            <div>
-              <ReelsContent />
-            </div>
-          )}
+          <div className={viewMode === "gallery" ? "" : "hidden"}>
+            <GalleryContent />
+          </div>
+          <div className={viewMode === "reels" ? "" : "hidden"}>
+            <ReelsContent isActive={viewMode === "reels"} />
+          </div>
         </div>
       </div>
     </section>
   )
-} 
+}

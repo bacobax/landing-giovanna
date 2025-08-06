@@ -12,6 +12,7 @@ export function GalleryContent() {
   const [loading, setLoading] = useState(true)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
   const [loadedPreview, setLoadedPreview] = useState<{ [key: string]: boolean }>({})
+  const [cacheBuster, setCacheBuster] = useState(Date.now())
 
   const toggleCardExpansion = (cardId: string) => {
     setExpandedCards(prev => {
@@ -35,6 +36,7 @@ export function GalleryContent() {
       const res = await fetch("/api/image")
       const data = await res.json()
       setImages(data)
+      setCacheBuster(Date.now())
     } catch {
       setImages([])
     } finally {
@@ -87,7 +89,7 @@ export function GalleryContent() {
                   <Skeleton className="absolute inset-0 h-full w-full" />
                 )}
                 <Image
-                  src={`/api/image/${image.id}?cb=${Date.now()}`}
+                  src={`/api/image/${image.id}?cb=${cacheBuster}`}
                   width={400}
                   height={300}
                   alt={image.alt}

@@ -27,14 +27,14 @@ export function ReelsContent() {
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
   const [reelsMedia, setReelsMedia] = useState<ReelMedia[]>([])
 
-  const fetchReels = async () => {
+  const fetchReels = useCallback(async () => {
     const res = await fetch("/api/reel")
     const data = await res.json()
     setReelsMedia(data)
     setCurrentIndex((prev) =>
       data.length > 0 ? Math.min(prev, data.length - 1) : 0
     )
-  }
+  }, [])
 
 
   const nextReel = useCallback(() => {
@@ -67,7 +67,10 @@ export function ReelsContent() {
   useEffect(() => {
     setIsMounted(true)
     fetchReels()
-  }, [])
+    const handleUpdate = () => fetchReels()
+    window.addEventListener("mediaUpdated", handleUpdate)
+    return () => window.removeEventListener("mediaUpdated", handleUpdate)
+  }, [fetchReels])
 
   useEffect(() => {
     if (reelsMedia.length === 0) return

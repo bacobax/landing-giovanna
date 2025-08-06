@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { GalleryImage } from "@/lib/gallery"
 
 export function GalleryContent() {
@@ -28,7 +28,7 @@ export function GalleryContent() {
     return description.substring(0, maxLength).trim() + "..."
   }
 
-  async function fetchImages() {
+  const fetchImages = useCallback(async () => {
     try {
       const res = await fetch("/api/image")
       const data = await res.json()
@@ -38,11 +38,14 @@ export function GalleryContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchImages()
-  }, [])
+    const handleUpdate = () => fetchImages()
+    window.addEventListener("mediaUpdated", handleUpdate)
+    return () => window.removeEventListener("mediaUpdated", handleUpdate)
+  }, [fetchImages])
 
   if (loading) {
     return (
